@@ -44,11 +44,6 @@ Servo myservo4;
 Servo myservo5;
 Servo myservo6;
 
-Servo moservo1;  // 定义电机结构体对象
-Servo moservo2;
-Servo moservo3;
-Servo moservo4;
-
 //我们的云台是逆时针旋转，按照从置物点向取物点看去的视角
 float Take_up_angle[6];   // 对应刚开始拿起物体时六个摆臂所需转动角度
 float Put_down_angle[6];  // 对应放下物体时六个摆臂所需转动的角度
@@ -66,6 +61,7 @@ void run_To_take() {
   digitalWrite(Motor1b, LOW);
   digitalWrite(Motor2a, HIGH);
   digitalWrite(Motor2b, LOW);
+  //加analog.write(Motor,200)调速
   delay(10);  // 调参确定走的距离
 }
 
@@ -186,16 +182,10 @@ void Assignment(){
 void setup() {
   Serial.begin(9600);
   
-  //不选择调速
   pinMode(Motor1a, OUTPUT);
   pinMode(Motor1b, OUTPUT);
   pinMode(Motor2a, OUTPUT);
   pinMode(Motor2b, OUTPUT);
-  //选择调速
-  moservo1.attach(Motor1a, 500, 2500);  //修正脉冲宽度
-  moservo2.attach(Motor1b, 500, 2500);
-  moservo3.attach(Motor2a, 500, 2500);  //修正脉冲宽度
-  moservo4.attach(Motor2b, 500, 2500);
 
   panservo.attach(Panservo, 500, 2500);
   myservo1.attach(Servo1, 500, 2500);
