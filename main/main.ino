@@ -185,11 +185,17 @@ void Assignment(){
 //程序运行
 void setup() {
   Serial.begin(9600);
-
+  
+  //不选择调速
   pinMode(Motor1a, OUTPUT);
   pinMode(Motor1b, OUTPUT);
   pinMode(Motor2a, OUTPUT);
   pinMode(Motor2b, OUTPUT);
+  //选择调速
+  moservo1.attach(Motor1a, 500, 2500);  //修正脉冲宽度
+  moservo2.attach(Motor1b, 500, 2500);
+  moservo3.attach(Motor2a, 500, 2500);  //修正脉冲宽度
+  moservo4.attach(Motor2b, 500, 2500);
 
   panservo.attach(Panservo, 500, 2500);
   myservo1.attach(Servo1, 500, 2500);
@@ -198,10 +204,6 @@ void setup() {
   myservo4.attach(Servo4, 500, 2500);
   myservo5.attach(Servo5, 500, 2500);
   myservo6.attach(Servo6, 500, 2500);
-  moservo1.attach(Motor1a, 500, 2500);  //修正脉冲宽度
-  moservo2.attach(Motor1b, 500, 2500);
-  moservo3.attach(Motor2a, 500, 2500);  //修正脉冲宽度
-  moservo4.attach(Motor2b, 500, 2500);
 }
 
 void loop() {
