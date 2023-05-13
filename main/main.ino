@@ -9,21 +9,13 @@ int Servo4 = 7;    //PWM
 int Servo5 = 8;    //PWM
 int Servo6 = 9;    //PWM
 
-// 控制吸盘吸气的引脚
+// 控制吸盘的引脚
 int Sucker1 = 16;
 int Sucker2 = 17;
 int Sucker3 = 18;
 int Sucker4 = 19;
 int Sucker5 = 20;
 int Sucker6 = 21;
-
-// 控制吸盘排气的引脚
-int Suckero1 = 22;
-int Suckero2 = 23;
-int Suckero3 = 24;
-int Suckero4 = 25;
-int Suckero5 = 26;
-int Suckero6 = 27;
 
 //电机控制，目前是想让两个电机接到一个输出口，后期可能会改成两个
 int Motor1a = 10;  // PWM波输入
@@ -93,7 +85,7 @@ void putDown(int type, Servo myservo, int PinSucker) {
   time = (type == 1) ?  10: 20;                             //如果为可乐，向下运动多少，如果为箱子，运动多少
   myservo.write(Pwmdown);                                   //舵机带动机械臂向下运动
   delay(time);
-  digitalWrite(PinSucker, HIGH);                            // 排气，松开物体
+  digitalWrite(PinSucker, LOW);                             // 排气，松开物体
   delay(1000);                                              // 给它排气的时间
   myservo.write(Pwmup);                                     //舵机带动机械臂向上运动
   delay(time);
@@ -133,27 +125,27 @@ void takeAll() {
 void putAll() {
   panservo.write(Put_down_angle[0]);
   delay(1000);  // 可能不需要
-  putDown(0, myservo1, Suckero1);
+  putDown(0, myservo1, Sucker1);
 
   panservo.write(Put_down_angle[1]);
   delay(1000);
-  putDown(0, myservo2, Suckero2);
+  putDown(0, myservo2, Sucker2);
 
   panservo.write(Put_down_angle[2]);
   delay(1000);
-  putDown(0, myservo3, Suckero3);
+  putDown(0, myservo3, Sucker3);
 
   panservo.write(Put_down_angle[3]);
   delay(1000);
-  putDown(1, myservo4, Suckero4);
+  putDown(1, myservo4, Sucker4);
 
   panservo.write(Put_down_angle[4]);
   delay(1000);
-  putDown(1, myservo5, Suckero5);
+  putDown(1, myservo5, Sucker5);
 
   panservo.write(Put_down_angle[5]);
   delay(1000);
-  putDown(1, myservo6, Suckero6);
+  putDown(1, myservo6, Sucker6);
 }
 
 void Assignment(){
@@ -186,6 +178,13 @@ void setup() {
   pinMode(Motor1b, OUTPUT);
   pinMode(Motor2a, OUTPUT);
   pinMode(Motor2b, OUTPUT);
+  
+  pinMode(Sucker1, OUTPUT);
+  pinMode(Sucker2, OUTPUT);
+  pinMode(Sucker3, OUTPUT);
+  pinMode(Sucker4, OUTPUT);
+  pinMode(Sucker5, OUTPUT);
+  pinMode(Sucker6, OUTPUT);
 
   panservo.attach(Panservo, 500, 2500);
   myservo1.attach(Servo1, 500, 2500);
