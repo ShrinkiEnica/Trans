@@ -2,7 +2,7 @@
 int pos = 0;
 Servo myservo;
 int servopin = 3;
-int relay = 4;
+int relay = 52;
 
 void setup() {
   Serial.begin(9600);
@@ -11,23 +11,8 @@ void setup() {
 }
 
 void loop() {
-
-  for (pos = 0; pos <= 180; pos += 1) {  //pos+=1等价于pos=pos+1
-    myservo.write(pos);
-    delay(15);
-  }
   digitalWrite(relay, HIGH);
-  for (pos = 180; pos >= 0; pos -= 1) {
-    myservo.write(pos);
-    delay(15);
-  }
-  for (pos = 0; pos <= 180; pos += 1) {  //pos+=1等价于pos=pos+1
-    myservo.write(pos);
-    delay(15);
-  }
+  delay(250000);
   digitalWrite(relay, LOW);
-  for (pos = 180; pos >= 0; pos -= 1) {
-    myservo.write(pos);
-    delay(15);
-  }
+  delay(2500);
 }
