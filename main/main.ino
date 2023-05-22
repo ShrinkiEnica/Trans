@@ -37,8 +37,8 @@ Servo myservo5;
 Servo myservo6;
 
 //我们的云台是逆时针旋转，按照从置物点向取物点看去的视角
-float Take_up_angle[6];   // 对应刚开始拿起物体时六个摆臂所需转动角度
-float Put_down_angle[6];  // 对应放下物体时六个摆臂所需转动的角度
+float Take_up_angle[6];   // 对应刚开始拿起物体时六个摆臂（？云台）所需转动角度
+float Put_down_angle[6];  // 对应放下物体时六个摆臂（？云台）所需转动的角度
 float Take_up_time[6];              // 对应放下物体时每一个物体要向下运动的距离
 
 int Pwmup = 180;
@@ -148,22 +148,25 @@ void putAll() {
   putDown(1, myservo6, Sucker6);
 }
 
-void Assignment(){
-  int i = 0,j = 0,k = 3;
-  for(i = 0;i < 6;i++){
-    if(A[i] == 0){
-      Take_up_angle[j] = 360 - (36 * i - 60 * j);
-      if(Take_up_angle[j] >= 360){
-        Take_up_angle[j] = Take_up_angle[j] - 360;
-      }
-      j++;
-    }
-    else{
-      Take_up_angle[k] = 360 - (36 * i - 60 * k);
-      k++;
+void Assignment() {
+  int i = 0, j = 0, k = 3;
+  for (i = 0; i < 6; i++) {
+    if (A[i] == 0) {
+      // 哦怪不得是360减去，不然000111这种就有可能搞出负值来
+      // 那也就是说舵机的一个初始角度就是顺时针旋转到360度，然后是一个逆时针旋转，理想状态下
+      // 可是我的电机好像是逆时针到360度，那看来是要拆了重新装了
+      // 好像重装没办法解决问题，那就是我取物体一直是从左往右取
+      // 欸好起来了，我好像传数据就是从左往右传出来的
+      // 废弃Take_up_angle[j] = (360 - (36 * i - 60 * j)) / 2;
+      Take_up_angle[j] = 180 - (18 * i - 30 * j) - 18 * (j % 2) + 9;
+      j++;  // j从0开始，意味着头三个机械臂抓的是箱子
+    } else {
+      // 废弃Take_up_angle[k] = (360 - (36 * i - 60 * k)) / 2;
+      Take_up_angle[k] = 180 - (18 * i - 30 * k) + 18 * (k % 2) - 9;
+      k++;  // k从3开始，意味着后三个机械臂抓的是可乐
     }
   }
-  for(i = 0;i < 6;i++){
+  for (i = 0; i < 6; i++) {
     Put_down_angle[i] = 20 + 60 * i;
   }
 }
