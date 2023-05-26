@@ -5,9 +5,6 @@ int Panservo = 3;  //PWM
 int Servo1 = 4;    //PWM
 int Servo2 = 5;    //PWM
 int Servo3 = 6;    //PWM
-int Servo4 = 7;    //PWM
-int Servo5 = 8;    //PWM
-int Servo6 = 9;    //PWM
 
 // 控制吸盘的引脚
 int Sucker1 = 16;
@@ -18,10 +15,11 @@ int Sucker5 = 20;
 int Sucker6 = 21;
 
 //电机控制，目前是想让两个电机接到一个输出口，后期可能会改成两个
+//mega的PWM：44-46
 int Motor1a = 10;  // PWM波输入
 int Motor1b = 11;  // PWM波输入
-int Motor2a = 12;
-int Motor2b = 13;
+int Motor2a = 45;
+int Motor2b = 46;
 
 //设置全局变量,如果变量要在中断中访问，要使用volatile进行申明
 int A[6];               // 对应各个物体是可乐还是箱子
@@ -32,9 +30,6 @@ Servo panservo;  // 底盘舵机结构体，还是对象
 Servo myservo1;  // 吸盘舵机对象
 Servo myservo2;
 Servo myservo3;
-Servo myservo4;
-Servo myservo5;
-Servo myservo6;
 
 //我们的云台是逆时针旋转，按照从置物点向取物点看去的视角
 float Take_up_angle[6];   // 对应刚开始拿起物体时六个摆臂（？云台）所需转动角度
@@ -54,7 +49,7 @@ void run_To_take() {
   digitalWrite(Motor2a, HIGH);
   digitalWrite(Motor2b, LOW);
   //加analog.write(Motor,200)调速
-  delay(10);  // 调参确定走的距离
+  delay(1000);  // 调参确定走的距离
 }
 
 void run_To_put() {
@@ -63,15 +58,16 @@ void run_To_put() {
   digitalWrite(Motor1b, HIGH);
   digitalWrite(Motor2a, LOW);
   digitalWrite(Motor2b, HIGH);
-  delay(10);  // 调参确定走的距离
+  delay(1000);  // 调参确定走的距离
 }
 
 
 // 这一套是假设对称分布的，即夹角为60度
+// 更改了，现在是120度了
 // type 为 提起的物品的类型 1为可乐，0为箱子
 void takeUp(int type, Servo myservo, int PinSucker) {
   int time = 0;                                             // 舵机向下运动的时间
-  time = (type == 1) ?  CocaTime: BoxTime[PinSucker - 16];  //如果为可乐，向下运动多少，如果为箱子，运动多少
+  time = (type == 1) ?  CocaTime: BoxTime[PinSucker - 16];  // 如果为可乐，向下运动多少，如果为箱子，运动多少
   myservo.write(Pwmdown);                                   // 使舵机带动机构向下动
   delay(time);
   digitalWrite(PinSucker, HIGH);                            // 吸气
@@ -82,18 +78,19 @@ void takeUp(int type, Servo myservo, int PinSucker) {
 // time 为 舵机下转的时间
 void putDown(int type, Servo myservo, int PinSucker) {
   int time = 0;
-  time = (type == 1) ?  10: 20;                             //如果为可乐，向下运动多少，如果为箱子，运动多少
-  myservo.write(Pwmdown);                                   //舵机带动机械臂向下运动
+  time = (type == 1) ?  10: 20;                             // 如果为可乐，向下运动多少，如果为箱子，运动多少
+  myservo.write(Pwmdown);                                   // 舵机带动机械臂向下运动
   delay(time);
   digitalWrite(PinSucker, LOW);                             // 排气，松开物体
   delay(1000);                                              // 给它排气的时间
-  myservo.write(Pwmup);                                     //舵机带动机械臂向上运动
+  myservo.write(Pwmup);                                     // 舵机带动机械臂向上运动
   delay(time);
 }
 
 // 提起所有箱子
 // panservo 是底盘的舵机
 // 关键在于angle[6]，用它来确定提起每一个物品所需转动的角度
+// 该函数目前还是顺序执行，应当可以进行设计使之支持并发执行
 //void takeAll(float angle[6], Servo panservo) {
 void takeAll() {
   panservo.write(Take_up_angle[0]);
@@ -102,23 +99,23 @@ void takeAll() {
 
   panservo.write(Take_up_angle[1]);
   delay(1000);
-  takeUp(0, myservo2, Sucker2);
+  takeUp(0, myservo1, Sucker2);
 
   panservo.write(Take_up_angle[2]);
   delay(1000);
-  takeUp(0, myservo3, Sucker3);
+  takeUp(1, myservo2, Sucker3);
 
   panservo.write(Take_up_angle[3]);
   delay(1000);
-  takeUp(1, myservo4, Sucker4);
+  takeUp(1, myservo2, Sucker4);
 
   panservo.write(Take_up_angle[4]);
   delay(1000);
-  takeUp(1, myservo5, Sucker5);
+  takeUp(1, myservo3, Sucker5);
 
   panservo.write(Take_up_angle[5]);
   delay(1000);
-  takeUp(1, myservo6, Sucker6);
+  takeUp(0, myservo3, Sucker6);
 }
 
 //void putAll(float angle[6], Servo panservo) {
@@ -129,27 +126,28 @@ void putAll() {
 
   panservo.write(Put_down_angle[1]);
   delay(1000);
-  putDown(0, myservo2, Sucker2);
+  putDown(0, myservo1, Sucker2);
 
   panservo.write(Put_down_angle[2]);
   delay(1000);
-  putDown(0, myservo3, Sucker3);
+  putDown(1, myservo2, Sucker3);
 
   panservo.write(Put_down_angle[3]);
   delay(1000);
-  putDown(1, myservo4, Sucker4);
+  putDown(1, myservo2, Sucker4);
 
   panservo.write(Put_down_angle[4]);
   delay(1000);
-  putDown(1, myservo5, Sucker5);
+  putDown(1, myservo3, Sucker5);
 
   panservo.write(Put_down_angle[5]);
   delay(1000);
-  putDown(1, myservo6, Sucker6);
+  putDown(0, myservo3, Sucker6);
 }
 
 void Assignment() {
   int i = 0, j = 0, k = 3;
+  int temp = 0;
   for (i = 0; i < 6; i++) {
     if (A[i] == 0) {
       // 哦怪不得是360减去，不然000111这种就有可能搞出负值来
@@ -176,9 +174,17 @@ void Assignment() {
       k++;  // k从3开始，意味着后三个机械臂抓的是可乐
     }
   }
-  for (i = 0; i < 6; i++) {
-    Put_down_angle[i] = 20 + 60 * i;
-  }
+  //将第三个箱子挂到第六个吸盘上，这样在置物时会方便些
+  temp = Take_up_angle[2];
+  Take_up_angle[2] = Take_up_angle[5];
+  Take_up_angle[5] = temp;
+
+  Put_down_angle[0] = 20 - 9;
+  Put_down_angle[1] = 20 + 9;
+  Put_down_angle[2] = 20 + 60 - 9;
+  Put_down_angle[3] = 20 + 60 + 9;
+  Put_down_angle[4] = 20 + 120 - 9;
+  Put_down_angle[5] = 20 + 120 + 9;
 }
 
 
@@ -203,13 +209,12 @@ void setup() {
   myservo1.attach(Servo1, 500, 2500);
   myservo2.attach(Servo2, 500, 2500);
   myservo3.attach(Servo3, 500, 2500);
-  myservo4.attach(Servo4, 500, 2500);
-  myservo5.attach(Servo5, 500, 2500);
-  myservo6.attach(Servo6, 500, 2500);
+
+  //在这里写一段将舵机统一抬升的代码，因为初始时吸盘触地
 }
 
 void loop() {
-  float distance;
+  //float distance;
   while (Serial.available() == 0) {}
   if ('s' == Serial.read()) {
     for (int i = 0; i++; i < 6) {
