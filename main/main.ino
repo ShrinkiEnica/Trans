@@ -174,6 +174,13 @@ void Assignment() {
       k++;  // k从3开始，意味着后三个机械臂抓的是可乐
     }
   }
+
+  for (i = 0; i < 6; i++) {
+    if(Take_up_angle[i] >= 180)
+    {
+      Take_up_angle[i] = 180 - Take_up_angle[i];
+    }
+  }
   //将第三个箱子挂到第六个吸盘上，这样在置物时会方便些
   temp = Take_up_angle[2];
   Take_up_angle[2] = Take_up_angle[5];

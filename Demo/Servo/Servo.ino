@@ -19,17 +19,16 @@ void setup() {
 }
 
 void loop() {
-  digitalWrite(Motor1a, HIGH);  //控制电机正转
-  digitalWrite(Motor1b, LOW);
-  digitalWrite(Motor2a, HIGH);  //控制电机正转
-  digitalWrite(Motor2b, LOW);
-  delay(1500);
-
-  digitalWrite(Motor1a, LOW);  //控制电机正转
-  digitalWrite(Motor1b, LOW);
-  digitalWrite(Motor2a, LOW);  //控制电机正转
-  digitalWrite(Motor2b, LOW);
-
+  myservo.write(0);
+  delay(8500);//从270回来6500差不多刚好
+  myservo.write(45);
+  delay(2500);
+  myservo.write(90);
+  delay(2500);
+  myservo.write(135);
+  delay(2500);
+  myservo.write(179);//可以到358°但似乎到不了360°
+  delay(3500);
   exit(0);
 }
 /*
