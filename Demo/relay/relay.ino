@@ -12,7 +12,8 @@ void setup() {
 
 void loop() {
   digitalWrite(relay, HIGH);
-  delay(250000);
+  delay(10000);
   digitalWrite(relay, LOW);
   delay(2500);
+  exit(0);
 }

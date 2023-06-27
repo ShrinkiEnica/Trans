@@ -2,12 +2,12 @@
 int pos = 0;
 Servo myservo;
 
-int servopin = 9;
+int servopin = 6;
 int Motor1a = 10;  // PWM波输入
 int Motor1b = 11;  // PWM波输入
 
-int Motor2a = 5;  // PWM波输入
-int Motor2b = 6;  // PWM波输入
+int Motor2a = 9;  // PWM波输入
+int Motor2b = 8;  // PWM波输入
 int i = 0;
 
 void setup() {
@@ -19,6 +19,21 @@ void setup() {
 }
 
 void loop() {
+  digitalWrite(Motor1a, HIGH);  //控制电机正转
+  digitalWrite(Motor1b, LOW);
+  digitalWrite(Motor2a, HIGH);  //控制电机正转
+  digitalWrite(Motor2b, LOW);
+  delay(1500);
+
+  digitalWrite(Motor1a, LOW);  //控制电机正转
+  digitalWrite(Motor1b, LOW);
+  digitalWrite(Motor2a, LOW);  //控制电机正转
+  digitalWrite(Motor2b, LOW);
+
+  exit(0);
+}
+/*
+//舵机修改版
   myservo.write(0);
   delay(8500);//从270回来6500差不多刚好
   myservo.write(45);
@@ -30,7 +45,7 @@ void loop() {
   myservo.write(179);//可以到358°但似乎到不了360°
   delay(3500);
   exit(0);
-}
+*/
 /*
 //双路版本
   digitalWrite(Motor1a, HIGH);  //控制电机正转
