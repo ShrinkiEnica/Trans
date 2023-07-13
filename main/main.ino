@@ -1,237 +1,360 @@
-#include <Servo.h>
+#include <Servo.h> //加载文件库
 
-//设置引脚
-int Panservo = 3;  //PWM
-int Servo1 = 4;    //PWM
-int Servo2 = 5;    //PWM
-int Servo3 = 6;    //PWM
-
-// 控制吸盘的引脚
-int Sucker1 = 16;
-int Sucker2 = 17;
-int Sucker3 = 18;
-int Sucker4 = 19;
-int Sucker5 = 20;
-int Sucker6 = 21;
-
-//电机控制，目前是想让两个电机接到一个输出口，后期可能会改成两个
-//mega的PWM：44-46
-int Motor1a = 10;  // PWM波输入
-int Motor1b = 11;  // PWM波输入
-int Motor2a = 45;
-int Motor2b = 46;
-
-//设置全局变量,如果变量要在中断中访问，要使用volatile进行申明
-int A[6];               // 对应各个物体是可乐还是箱子
-float CocaTime = 0;     // 提起可乐舵机运动的时间
-float BoxTime[3];       // 提起箱子舵机运动的时间
-
-Servo panservo;  // 底盘舵机结构体，还是对象
-Servo myservo1;  // 吸盘舵机对象
-Servo myservo2;
-Servo myservo3;
-
-//我们的云台是逆时针旋转，按照从置物点向取物点看去的视角
-float Take_up_angle[6];   // 对应刚开始拿起物体时六个摆臂（？云台）所需转动角度
-float Put_down_angle[6];  // 对应放下物体时六个摆臂（？云台）所需转动的角度
-float Take_up_time[6];              // 对应放下物体时每一个物体要向下运动的距离
-
-int Pwmup = 180;
-int Pwmstop = 90; // 用于servo.write
-int Pwmdown = 0;
-
-
-
-void run_To_take() {
-  // 控制两个电机同时正转
-  digitalWrite(Motor1a, HIGH);
-  digitalWrite(Motor1b, LOW);
-  digitalWrite(Motor2a, HIGH);
-  digitalWrite(Motor2b, LOW);
-  //加analog.write(Motor,200)调速
-  delay(1000);  // 调参确定走的距离
-}
-
-void run_To_put() {
-  // 控制两个电机同时反转
-  digitalWrite(Motor1a, LOW);
-  digitalWrite(Motor1b, HIGH);
-  digitalWrite(Motor2a, LOW);
-  digitalWrite(Motor2b, HIGH);
-  delay(1000);  // 调参确定走的距离
-}
-
-
-// 这一套是假设对称分布的，即夹角为60度
-// 更改了，现在是120度了
-// type 为 提起的物品的类型 1为可乐，0为箱子
-void takeUp(int type, Servo myservo, int PinSucker) {
-  int time = 0;                                             // 舵机向下运动的时间
-  time = (type == 1) ?  CocaTime: BoxTime[PinSucker - 16];  // 如果为可乐，向下运动多少，如果为箱子，运动多少
-  myservo.write(Pwmdown);                                   // 使舵机带动机构向下动
-  delay(time);
-  digitalWrite(PinSucker, HIGH);                            // 吸气
-  myservo.write(Pwmup);                                     // 使舵机带动机构向上动
-  delay(time);
-}
-
-// time 为 舵机下转的时间
-void putDown(int type, Servo myservo, int PinSucker) {
-  int time = 0;
-  time = (type == 1) ?  10: 20;                             // 如果为可乐，向下运动多少，如果为箱子，运动多少
-  myservo.write(Pwmdown);                                   // 舵机带动机械臂向下运动
-  delay(time);
-  digitalWrite(PinSucker, LOW);                             // 排气，松开物体
-  delay(1000);                                              // 给它排气的时间
-  myservo.write(Pwmup);                                     // 舵机带动机械臂向上运动
-  delay(time);
-}
-
-// 提起所有箱子
-// panservo 是底盘的舵机
-// 关键在于angle[6]，用它来确定提起每一个物品所需转动的角度
-// 该函数目前还是顺序执行，应当可以进行设计使之支持并发执行
-//void takeAll(float angle[6], Servo panservo) {
-void takeAll() {
-  panservo.write(Take_up_angle[0]);
-  delay(1000);  // 可能不需要
-  takeUp(0, myservo1, Sucker1);
-
-  panservo.write(Take_up_angle[1]);
-  delay(1000);
-  takeUp(0, myservo1, Sucker2);
-
-  panservo.write(Take_up_angle[2]);
-  delay(1000);
-  takeUp(1, myservo2, Sucker3);
-
-  panservo.write(Take_up_angle[3]);
-  delay(1000);
-  takeUp(1, myservo2, Sucker4);
-
-  panservo.write(Take_up_angle[4]);
-  delay(1000);
-  takeUp(1, myservo3, Sucker5);
-
-  panservo.write(Take_up_angle[5]);
-  delay(1000);
-  takeUp(0, myservo3, Sucker6);
-}
-
-//void putAll(float angle[6], Servo panservo) {
-void putAll() {
-  panservo.write(Put_down_angle[0]);
-  delay(1000);  // 可能不需要
-  putDown(0, myservo1, Sucker1);
-
-  panservo.write(Put_down_angle[1]);
-  delay(1000);
-  putDown(0, myservo1, Sucker2);
-
-  panservo.write(Put_down_angle[2]);
-  delay(1000);
-  putDown(1, myservo2, Sucker3);
-
-  panservo.write(Put_down_angle[3]);
-  delay(1000);
-  putDown(1, myservo2, Sucker4);
-
-  panservo.write(Put_down_angle[4]);
-  delay(1000);
-  putDown(1, myservo3, Sucker5);
-
-  panservo.write(Put_down_angle[5]);
-  delay(1000);
-  putDown(0, myservo3, Sucker6);
-}
-
-void Assignment() {
-  int i = 0, j = 0, k = 3;
-  int temp = 0;
-  for (i = 0; i < 6; i++) {
-    if (A[i] == 0) {
-      // 哦怪不得是360减去，不然000111这种就有可能搞出负值来
-      // 那也就是说舵机的一个初始角度就是顺时针旋转到360度，然后是一个逆时针旋转，理想状态下
-      // 可是我的电机好像是逆时针到360度，那看来是要拆了重新装了
-      // 好像重装没办法解决问题，那就是我取物体一直是从左往右取
-      // 欸好起来了，我好像传数据就是从左往右传出来的
-      // 废弃Take_up_angle[j] = (360 - (36 * i - 60 * j)) / 2;
-      if(j != 2)
-      {
-        Take_up_angle[j] = 180 - 18 * i - 18 * (j % 2) + 9;
-      }else{
-        Take_up_angle[j] = 180 - (18 * i - 60) - 18 * (j % 2) + 9;
-      }
-      j++;  // j从0开始，意味着头三个机械臂抓的是箱子
-    } else {
-      // 废弃Take_up_angle[k] = (360 - (36 * i - 60 * k)) / 2;
-      if(k == 3)
-      {
-        Take_up_angle[k] = 180 - (18 * i - 60) + 18 * (k % 2) - 9;
-      }else{
-        Take_up_angle[k] = 180 - (18 * i - 120) + 18 * (k % 2) - 9;
-      }
-      k++;  // k从3开始，意味着后三个机械臂抓的是可乐
-    }
-  }
-
-  for (i = 0; i < 6; i++) {
-    if(Take_up_angle[i] >= 180)
+class Center_servo
+{
+private:
+    Servo center_servo;
+    int pin;
+    int angle;
+    int relay_pin;
+public:
+    Center_servo(int pin,int relay_pin, int angle)
     {
-      Take_up_angle[i] = 180 - Take_up_angle[i];
+        this->pin = pin;
+        this->angle = angle;
+        this->relay_pin = relay_pin;
     }
-  }
-  //将第三个箱子挂到第六个吸盘上，这样在置物时会方便些
-  temp = Take_up_angle[2];
-  Take_up_angle[2] = Take_up_angle[5];
-  Take_up_angle[5] = temp;
+    void run_to(int run_to_angle)
+    {
+        // 设置每次要转的角度，顺时针2度和逆时针2度
+        int interval = run_to_angle >= angle ? 1 : -1;
+        // 设置要转的次数
+        int times = (run_to_angle - angle) / interval;
+        for (int i = 0; i < times; i++)
+        {
+            center_servo.write(angle + i * interval);
+            delay(40);
+        }
+        // 更新变量
+        // 更新变量的时间不需要那么长
+        delay(5);
+        angle = run_to_angle;
+    }
+    void init(int reset_angle = 180 / 2)
+    {
+        digitalWrite(relay_pin,HIGH);
+        center_servo.write(reset_angle);
+        // 更新变量
+        delay(5);
+        angle = reset_angle;
+    }
 
-  Put_down_angle[0] = 20 - 9;
-  Put_down_angle[1] = 20 + 9;
-  Put_down_angle[2] = 20 + 60 - 9;
-  Put_down_angle[3] = 20 + 60 + 9;
-  Put_down_angle[4] = 20 + 120 - 9;
-  Put_down_angle[5] = 20 + 120 + 9;
+    void relay_enable(){
+        digitalWrite(relay_pin,HIGH);
+    }
+
+    void write(int run_to_angle)
+    {
+        center_servo.write(run_to_angle);
+        angle = run_to_angle;
+    }
+
+    void attach(int attach_pin, int var1, int var2)
+    {
+        center_servo.attach(attach_pin, var1, var2);
+    }
+
+
+};
+
+
+class Sucker
+{
+private:
+    int pin;
+public:
+    Sucker(int pin)
+    {
+        this->pin = pin;
+    }
+    void suck()
+    {
+        digitalWrite(pin, HIGH);
+    }
+    void exhale()
+    {
+        digitalWrite(pin, LOW);
+    }
+};
+
+
+class Motor
+{
+private:
+    int pos_pin;
+    int neg_pin;
+public:
+    Motor(int pos_pin, int neg_pin)
+    {
+        this->pos_pin = pos_pin;
+        this->neg_pin = neg_pin;
+    }
+    void run_forward(int duty_cycle)
+    {
+        analogWrite(pos_pin, duty_cycle * 255);
+        digitalWrite(neg_pin, LOW);
+    }
+    void run_backward(int duty_cycle)
+    {
+        analogWrite(neg_pin, duty_cycle * 255);
+        digitalWrite(pos_pin, LOW);
+    }
+    void stop()
+    {
+        digitalWrite(pos_pin, LOW);
+        digitalWrite(neg_pin, LOW);
+    }
+};
+
+
+class Servo_class
+{
+private:
+    Servo my_servo;
+    int stable_angle;
+    int pin;
+public:
+    Servo_class(int pin, int stable_angle = 92)
+    {
+        this->pin = pin;
+        this->stable_angle = stable_angle;
+    }
+
+    void quick_up(int time)
+    {
+        my_servo.write(170);
+        delay(time);
+        my_servo.write(stable_angle);
+    }
+    void stop(int stable_angle = 92){
+        my_servo.write(stable_angle);
+    }
+    void write_up()
+    {
+        my_servo.write(170);
+    }
+
+    void write_down()
+    {
+        my_servo.write(10);
+    }
+    void quick_down(int time)
+    {
+        my_servo.write(10);
+        delay(time);
+        my_servo.write(stable_angle);
+    }
+    void attach(int attach_pin, int pulse_width_start, int pulse_width_end)
+    {
+        my_servo.attach(attach_pin, pulse_width_start, pulse_width_end);
+        pin = attach_pin;
+    }
+};
+
+
+class Claw
+{
+private:
+    int pin;
+    int release_angle;
+    int grab_angle;
+    int time;
+    Servo my_servo;
+public:
+    Claw(int release_angle, int grab_angle)
+    {
+        this->release_angle = release_angle;
+        this->grab_angle = grab_angle;
+        this->time = 2000;
+    }
+
+    void grab()
+    {
+        my_servo.write(grab_angle);
+        delay(time);
+    }
+    void release()
+    {
+        my_servo.write(release_angle);
+        delay(time);
+    }
+    void attach(int attach_pin, int val1, int val2)
+    {
+        my_servo.attach(attach_pin, val1, val2);
+        pin = attach_pin;
+    }
+
+};
+
+
+//{ 引脚定义
+const int motor_pos_pin = 10;
+const int motor_neg_pin = 11;
+
+const int center_servo_pin = 12;
+const int center_servo_relay_pin = 50;
+
+const int sucker_21_pin = 51;
+const int sucker_22_pin = 52;
+const int sucker_11_pin = 53;
+const int claw_12_pin = 5;
+const int claw_31_pin = 6;
+const int claw_32_pin = 7;
+
+const int servo_1_pin = 2;
+const int servo_2_pin = 3;
+const int servo_3_pin = 4;
+//}
+
+
+// 有用的全局变量定义
+// 判断是箱子还是可乐的数组
+const int coke_0_box_1[6] = {1, 0, 0, 1, 0, 1};
+const int angles_1_1[6] = {234, 268, 304, 340, 16, 52};
+const int angles_2_1[6] = {350,26,60,98,134,170};
+const int angles_3_1[6] = {110,146,180,218,254,290};
+
+
+// 轮子电机、中央舵机、吸盘电机、悬臂电机类的初始化
+Motor My_motor(motor_pos_pin, motor_neg_pin);
+Center_servo center_servo(center_servo_pin,center_servo_relay_pin, 180 / 2);
+
+Sucker sucker11(sucker_11_pin);
+Sucker sucker12(sucker_22_pin);
+Sucker sucker21(sucker_21_pin);
+Claw claw12(30, 90);
+Claw claw31(20, 100);
+Claw claw32(30, 70);
+
+Servo_class servo_1(servo_1_pin, 91);
+Servo_class servo_2(servo_2_pin);
+Servo_class servo_3(servo_3_pin, 92);
+//}
+
+
+//这个函数目前看来似乎使用不到
+/*
+void take_all()
+{
+    int angle_sucker_11[6] = {};
+    int angle_sucker_12[6] = {};
+    int angle_sucker_21[6] = {};
+    int angle_claw_22[6] = {};
+    int angle_claw_31[6] = {};
+    int angle_claw_32[6] = {};
+}
+*/
+
+
+void initiate(){
+    center_servo.relay_enable();
+    center_servo.write(180 / 2);
+    int time_begin = millis();
+    servo_1.write_up();
+    servo_2.write_up();
+    servo_3.write_up();
+    while(millis() - time_begin < 500);
+    servo_1.stop();
+    servo_2.stop();
+    servo_3.stop();
+
 }
 
 
-
-//程序运行
-void setup() {
-  Serial.begin(9600);
-  
-  pinMode(Motor1a, OUTPUT);
-  pinMode(Motor1b, OUTPUT);
-  pinMode(Motor2a, OUTPUT);
-  pinMode(Motor2b, OUTPUT);
-  
-  pinMode(Sucker1, OUTPUT);
-  pinMode(Sucker2, OUTPUT);
-  pinMode(Sucker3, OUTPUT);
-  pinMode(Sucker4, OUTPUT);
-  pinMode(Sucker5, OUTPUT);
-  pinMode(Sucker6, OUTPUT);
-
-  panservo.attach(Panservo, 500, 2500);
-  myservo1.attach(Servo1, 500, 2500);
-  myservo2.attach(Servo2, 500, 2500);
-  myservo3.attach(Servo3, 500, 2500);
-
-  //在这里写一段将舵机统一抬升的代码，因为初始时吸盘触地
+/*
+void put_all()
+{
+    int coke_angles[6] = {170 / 2, 190 / 2, 290 / 2, 325 / 2, 10 / 2, 45 / 2};
+    int box_angles[6] = {60 / 2, 95 / 2, 185 / 2, 195 / 2, 308 / 2, 308 / 2};
+    Sucker suckers[6] = {
+        sucker11,
+        sucker12,
+        sucker21,
+        };
+    Servo_class servos[3] = {
+        servo_1,
+        servo_2,
+        servo_3};
+    // 由于箱子有高度，所以每次舵机下降的时间要变短
+    int box_down_times[3] = {1000, 500, 0};
+    int already_put_boxes = 0;
+    int cola_down_times;
+    // 判断当前的sucker是可乐还是箱子，并放下
+    for (int i = 0; i < 6; i++)
+    {
+        // 如果是可乐
+           if (coke_0_box_1[i] == 0){
+           center_servo.run_to(coke_angles[i]);
+           servos[i/2].slow_down(cola_down_times);
+           suckers[i].exhale();
+           delay(1000);
+           }
+        // 如果是箱子
+        if (coke_0_box_1[i] == 1)
+        {
+            center_servo.run_to(box_angles[i]);
+            servos[i / 2].slow_down(box_down_times[already_put_boxes]);
+            suckers[i].exhale();
+            delay(1000);
+            already_put_boxes++;
+        }
+    }
 }
+*/
+
+
+void test_center(){
+
+}
+
+
+void test_servo(){
+
+}
+
+
+void test_claw() {
+  servo_1.quick_up(1500);
+  claw12.release();
+  delay(1000);
+  servo_1.quick_down(1000);
+  claw12.grab();
+  delay(500);
+  servo_1.quick_up(1000);
+}
+
+
+void setup()
+{
+    Serial.begin(9600);
+    // 修正脉冲宽度
+    pinMode(motor_neg_pin, OUTPUT);
+    pinMode(motor_pos_pin, OUTPUT);
+
+    pinMode(sucker_11_pin, OUTPUT);
+    pinMode(sucker_22_pin, OUTPUT);
+    pinMode(sucker_21_pin, OUTPUT);
+
+    pinMode(center_servo_relay_pin,OUTPUT);
+    center_servo.attach(center_servo_pin, 500, 2500);
+
+    claw12.attach(claw_12_pin, 500, 2500);
+    claw31.attach(claw_31_pin, 500, 2500);
+    claw32.attach(claw_32_pin, 500, 2500);
+
+    servo_1.attach(servo_1_pin, 500, 2500);
+    servo_2.attach(servo_2_pin, 500, 2500);
+    servo_3.attach(servo_3_pin, 500, 2500);
+}
+
 
 void loop() {
-  //float distance;
-  while (Serial.available() == 0) {}
-  if ('s' == Serial.read()) {
-    for (int i = 0; i++; i < 6) {
-      while (Serial.available() == 0) {}
-      A[i] = Serial.read() - '0';
-    }
-    Assignment();
-    run_To_take();
-    takeAll();
-    run_To_put();
-    putAll();
-  }
+  // 跑路时间
+  delay(2000);
+
+  //test_claw();
+
+  delay(1000000);
+
+  exit(0);
 }
