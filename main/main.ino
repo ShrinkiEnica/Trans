@@ -7,8 +7,9 @@ private:
     int pin;
     int angle;
     int relay_pin;
+
 public:
-    Center_servo(int pin,int relay_pin, int angle)
+    Center_servo(int pin, int relay_pin, int angle)
     {
         this->pin = pin;
         this->angle = angle;
@@ -32,15 +33,16 @@ public:
     }
     void init(int reset_angle = 180 / 2)
     {
-        digitalWrite(relay_pin,HIGH);
+        digitalWrite(relay_pin, HIGH);
         center_servo.write(reset_angle);
         // 更新变量
         delay(5);
         angle = reset_angle;
     }
 
-    void relay_enable(){
-        digitalWrite(relay_pin,HIGH);
+    void relay_enable()
+    {
+        digitalWrite(relay_pin, HIGH);
     }
 
     void write(int run_to_angle)
@@ -53,15 +55,13 @@ public:
     {
         center_servo.attach(attach_pin, var1, var2);
     }
-
-
 };
-
 
 class Sucker
 {
 private:
     int pin;
+
 public:
     Sucker(int pin)
     {
@@ -77,27 +77,27 @@ public:
     }
 };
 
-
 class Motor
 {
 private:
     int pos_pin;
     int neg_pin;
+
 public:
     Motor(int pos_pin, int neg_pin)
     {
         this->pos_pin = pos_pin;
         this->neg_pin = neg_pin;
     }
-    void run_forward(int duty_cycle)
-    {
-        analogWrite(pos_pin, duty_cycle * 255);
-        digitalWrite(neg_pin, LOW);
-    }
     void run_backward(int duty_cycle)
     {
-        analogWrite(neg_pin, duty_cycle * 255);
+        analogWrite(neg_pin, duty_cycle * 255 / 100);
         digitalWrite(pos_pin, LOW);
+    }
+    void run_forward(int duty_cycle)
+    {
+        analogWrite(pos_pin, duty_cycle * 255 / 100);
+        digitalWrite(neg_pin, LOW);
     }
     void stop()
     {
@@ -106,13 +106,13 @@ public:
     }
 };
 
-
 class Servo_class
 {
 private:
     Servo my_servo;
     int stable_angle;
     int pin;
+
 public:
     Servo_class(int pin, int stable_angle = 92)
     {
@@ -126,7 +126,8 @@ public:
         delay(time);
         my_servo.write(stable_angle);
     }
-    void stop(int stable_angle = 92){
+    void stop(int stable_angle = 92)
+    {
         my_servo.write(stable_angle);
     }
     void write_up()
@@ -151,7 +152,6 @@ public:
     }
 };
 
-
 class Claw
 {
 private:
@@ -160,6 +160,7 @@ private:
     int grab_angle;
     int time;
     Servo my_servo;
+
 public:
     Claw(int release_angle, int grab_angle)
     {
@@ -183,21 +184,20 @@ public:
         my_servo.attach(attach_pin, val1, val2);
         pin = attach_pin;
     }
-
 };
 
-
 //{ 引脚定义
-const int motor_pos_pin = 10;
-const int motor_neg_pin = 11;
+const int motor_pos_pin = 8;
+const int motor_neg_pin = 9;
 
-const int center_servo_pin = 12;
+const int center_servo_pin = 10;
 const int center_servo_relay_pin = 50;
 
-const int sucker_21_pin = 51;
-const int sucker_22_pin = 52;
-const int sucker_11_pin = 53;
-const int claw_12_pin = 5;
+const int sucker_22_pin = 51;
+const int sucker_12_pin = 52;
+const int sucker11_pin = 53;
+
+const int claw_21_pin = 5;
 const int claw_31_pin = 6;
 const int claw_32_pin = 7;
 
@@ -206,60 +206,63 @@ const int servo_2_pin = 3;
 const int servo_3_pin = 4;
 //}
 
-
 // 有用的全局变量定义
 // 判断是箱子还是可乐的数组
-const int coke_0_box_1[6] = {1, 0, 0, 1, 0, 1};
-const int angles_1_1[6] = {234, 268, 304, 340, 16, 52};
-const int angles_2_1[6] = {350,26,60,98,134,170};
-const int angles_3_1[6] = {110,146,180,218,254,290};
+// 由于历史遗留问题，1和2替换一下
+int coke_0_box_1[6] = {0, 1, 0, 0, 1, 1};
+int angles_1_1[6] = {108, 144, 180, 218, 252, 288};
+int angles_2_1[6] = {232, 266, 302, 338, 14, 52};
+int angles_3_1[6] = {350, 26, 60, 98, 134, 170}; // 第四个有问题,第三个小了
+int center_angles[6] = {160, 160, 160, 160, 160, 160};
 
+int put_to_left_angles[6] = {214, 176, 94, 60, 334, 300};
+int put_to_right_angles[6] = {304, 266, 184, 150, 64, 30};
 
-// 轮子电机、中央舵机、吸盘电机、悬臂电机类的初始化
+// 轮子电机、中央舵机、吸盘电机、悬臂电机类的初始化{
 Motor My_motor(motor_pos_pin, motor_neg_pin);
-Center_servo center_servo(center_servo_pin,center_servo_relay_pin, 180 / 2);
+Center_servo center_servo(center_servo_pin, center_servo_relay_pin, 180 / 2);
 
-Sucker sucker11(sucker_11_pin);
-Sucker sucker12(sucker_22_pin);
-Sucker sucker21(sucker_21_pin);
-Claw claw12(30, 90);
-Claw claw31(20, 100);
-Claw claw32(30, 70);
+Sucker sucker_22(sucker_22_pin);
+Sucker sucker_12(sucker_12_pin);
+Sucker sucker11(sucker11_pin);
+Claw claw22(30, 90);
+Claw claw11(20, 100);
+Claw claw12(40, 110);
 
 Servo_class servo_1(servo_1_pin, 91);
 Servo_class servo_2(servo_2_pin);
 Servo_class servo_3(servo_3_pin, 92);
 //}
 
-
-//这个函数目前看来似乎使用不到
+// 这个函数目前看来似乎使用不到
 /*
 void take_all()
 {
     int angle_sucker_11[6] = {};
     int angle_sucker_12[6] = {};
-    int angle_sucker_21[6] = {};
-    int angle_claw_22[6] = {};
+    int angle_sucker_22[6] = {};
+    int angle_claw_21[6] = {};
     int angle_claw_31[6] = {};
     int angle_claw_32[6] = {};
 }
 */
 
-
-void initiate(){
-    center_servo.relay_enable();
-    center_servo.write(180 / 2);
+void initiate()
+{
     int time_begin = millis();
     servo_1.write_up();
     servo_2.write_up();
     servo_3.write_up();
-    while(millis() - time_begin < 500);
+    while (millis() - time_begin < 1500)
+        ;
     servo_1.stop();
     servo_2.stop();
     servo_3.stop();
 
+    center_servo.relay_enable();
+    center_servo.write(180 / 2);
+    delay(8000);
 }
-
 
 /*
 void put_all()
@@ -267,9 +270,9 @@ void put_all()
     int coke_angles[6] = {170 / 2, 190 / 2, 290 / 2, 325 / 2, 10 / 2, 45 / 2};
     int box_angles[6] = {60 / 2, 95 / 2, 185 / 2, 195 / 2, 308 / 2, 308 / 2};
     Sucker suckers[6] = {
-        sucker11,
-        sucker12,
-        sucker21,
+        sucker_11,
+        sucker_12,
+        sucker_22,
         };
     Servo_class servos[3] = {
         servo_1,
@@ -302,28 +305,103 @@ void put_all()
 }
 */
 
-
-void test_center(){
-
+void test_center()
+{
 }
 
-
-void test_servo(){
-
+void test_servo()
+{
 }
 
-
-void test_claw() {
-  servo_1.quick_up(1500);
-  claw12.release();
-  delay(1000);
-  servo_1.quick_down(1000);
-  claw12.grab();
-  delay(500);
-  servo_1.quick_up(1000);
+void test_claw()
+{
+    servo_1.quick_up(1500);
+    claw22.release();
+    delay(1000);
+    servo_1.quick_down(1000);
+    claw22.grab();
+    delay(500);
+    servo_1.quick_up(1000);
 }
 
+void test_assignment()
+{
+    int m = 0;
+    int n = 0;
+    int temp = -1;
+    int mark = -1;
+    for (int i = 0; i < 6; i++)
+    {
+        if (i == 0)
+            // 如果是第一次，那么对temp初始化
+            temp = coke_0_box_1[0];
+        else
+        {
+            if (temp == coke_0_box_1[i] && 1 == temp)
+            {
+                center_angles[0] = angles_1_1[i - 1];
+                center_angles[1] = angles_1_1[i - 1];
+                m = i;
+                mark++;
+            }
+            else if (temp == coke_0_box_1[i] && 0 == temp)
+            {
+                center_angles[2] = angles_3_1[i - 1];
+                center_angles[3] = angles_3_1[i - 1];
+                n = i;
+                mark++;
+            }
+        }
+    }
+    for (int j = 0; j < 6; j++)
+    {
+        if (mark)
+        {
+            if (1 == coke_0_box_1[j] && m != j && (m - 1) != j)
+            {
+                center_angles[4] = angles_2_1[j];
+            }
+            else if (0 == coke_0_box_1[j] && n != j && (n - 1) != j)
+            {
+                center_angles[5] = angles_2_1[j - 1];
+            }
+        }
+        else if (coke_0_box_1[0])
+        {
+        }
+        else if (!coke_0_box_1[0])
+        {
+        }
+    }
+}
 
+void test_array(int *angle_array)
+{
+    for (int i = 0; i < 6; i++)
+    {
+        center_servo.run_to(angle_array[i] / 2);
+        delay(2000);
+    }
+}
+
+void test_logic()
+{
+}
+
+void run_to_put()
+{
+    My_motor.run_backward(80);
+    // 4600
+    delay(5500);
+    My_motor.stop();
+}
+
+void run_to_take()
+{
+    My_motor.run_forward(80);
+    delay(2650);
+    My_motor.stop();
+}
 void setup()
 {
     Serial.begin(9600);
@@ -331,30 +409,32 @@ void setup()
     pinMode(motor_neg_pin, OUTPUT);
     pinMode(motor_pos_pin, OUTPUT);
 
-    pinMode(sucker_11_pin, OUTPUT);
+    pinMode(sucker11_pin, OUTPUT);
+    pinMode(sucker_12_pin, OUTPUT);
     pinMode(sucker_22_pin, OUTPUT);
-    pinMode(sucker_21_pin, OUTPUT);
 
-    pinMode(center_servo_relay_pin,OUTPUT);
+    pinMode(center_servo_relay_pin, OUTPUT);
     center_servo.attach(center_servo_pin, 500, 2500);
 
-    claw12.attach(claw_12_pin, 500, 2500);
-    claw31.attach(claw_31_pin, 500, 2500);
-    claw32.attach(claw_32_pin, 500, 2500);
+    claw22.attach(claw_21_pin, 500, 2500);
+    claw11.attach(claw_31_pin, 500, 2500);
+    claw12.attach(claw_32_pin, 500, 2500);
 
     servo_1.attach(servo_1_pin, 500, 2500);
     servo_2.attach(servo_2_pin, 500, 2500);
     servo_3.attach(servo_3_pin, 500, 2500);
 }
 
+void loop()
+{
+    // 跑路时间
+    delay(2000);
 
-void loop() {
-  // 跑路时间
-  delay(2000);
+    My_motor.run_backward(100);
+    delay(4900);
+    My_motor.stop();
 
-  //test_claw();
+    delay(10000);
 
-  delay(1000000);
-
-  exit(0);
+    exit(0);
 }
