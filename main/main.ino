@@ -210,13 +210,20 @@ const int servo_3_pin = 4;
 // 判断是箱子还是可乐的数组
 // 由于历史遗留问题，1和2替换一下
 int coke_0_box_1[6] = {0, 1, 0, 0, 1, 1};
-int angles_1_1[6] = {108, 144, 180, 218, 252, 288};
-int angles_2_1[6] = {232, 266, 302, 338, 14, 52};
-int angles_3_1[6] = {350, 26, 60, 98, 134, 170}; // 第四个有问题,第三个小了
-int center_angles[6] = {160, 160, 160, 160, 160, 160};
+// int angles_1_1[6] = {108, 144, 180, 218, 252, 288};
+// int angles_2_1[6] = {232, 266, 302, 338, 14, 52};
+// int angles_3_1[6] = {350, 26, 60, 98, 134, 170}; // 第四个有问题,第三个小了
+/* 这是有7个的情况*/
+int angles_1_1[7] = {72,108, 144, 180, 218, 252, 288};
+int angles_2_1[7] = {200,232, 266, 302, 338, 14, 52};               int center_angles[6] = {160, 160, 160, 160, 160, 160};
+int angles_3_1[7] = {320,350, 26, 60, 98, 134, 170}; // 第四个有问题,第三个小了
 
 int put_to_left_angles[6] = {214, 176, 94, 60, 334, 300};
 int put_to_right_angles[6] = {304, 266, 184, 150, 64, 30};
+            
+int device_use_sequence[6] = {};
+int item_take_sequence[6] = {};
+
 
 // 轮子电机、中央舵机、吸盘电机、悬臂电机类的初始化{
 Motor My_motor(motor_pos_pin, motor_neg_pin);
@@ -375,6 +382,10 @@ void test_assignment()
     }
 }
 
+void minimal_assignment(){
+
+}
+
 void test_array(int *angle_array)
 {
     for (int i = 0; i < 6; i++)
@@ -429,6 +440,27 @@ void loop()
 {
     // 跑路时间
     delay(2000);
+    
+    while(1){
+        if (Serial.available())
+        {
+            delay(100);
+            if (Serial.read() == 's')
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    device_use_sequence[i] = Serial.read() - '0';
+                }
+                for (int i = 0; i < 6; i++)
+                {
+                    item_take_sequence[i] = Serial.read() - '0';
+                }
+                break;
+            }
+        }
+    }
+    // 
+    
 
     My_motor.run_backward(100);
     delay(4900);

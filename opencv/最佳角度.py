@@ -88,8 +88,8 @@ def verify_feasibility(item_layout_sequence: list[ColaBox],
                 # 如果要拿的是前方摆放东西的5号位，那么不用考虑，肯定可以
                 if item_take_sequence[index] == 5:
                     pass
-                # 2号位拿了东西和2号位下的地上有东西不能同时发生
-                # 注意这里地方有东西是taken_device_index=-1代表没有被拿
+                    # 2号位拿了东西和2号位下的地上有东西不能同时发生
+                    # 注意这里地方有东西是taken_device_index=-1代表没有被拿
                 elif device_layout_sequence[device.arm_index+1].is_take == True and item_layout_sequence[device_use_sequence[index] + 1].taken_device_index == -1:
                     cant_use = True
                     break
@@ -102,7 +102,7 @@ def verify_feasibility(item_layout_sequence: list[ColaBox],
                     break
             # 进行拿取操作
             item_layout_sequence[item_take_sequence[index]
-                                 ].taken_device_index = device.arm_index
+        ].taken_device_index = device.arm_index
             device.is_take = True
         # 如果当前的不能用，那么就进行下一个device_use_sequence的试错
         if cant_use == True:
@@ -129,8 +129,8 @@ device_take_angles = generate_device_take_angles()
 all_item_layout_sequence = [generate_item_layout_sequence(ls) for ls in map(
     list, set(itertools.permutations([0, 0, 0, 1, 1, 1])))]
 one_device_layout_sequence = generate_device_layout_sequence([
-                                                             1, 1, 1, 0, 0, 0])
-# one_item_layout_sequence  = generate_item_layout_sequence([1,0,1,0,0,1])
+    1,1,1,0,0,0])
+one_item_layout_sequence  = generate_item_layout_sequence([0,1,0,0,1,1])
 # one_item_take_sequence = [0,1,2,3,4,5]
 
 
@@ -156,8 +156,6 @@ def calc_min(one_item_layout_sequence:list[ColaBox]):
 
     # 对每一种可能的拿取顺序进行遍历
     # 这里map是为了把itertools.permutations生成的元组里的子元组都转化成子列表，以便传参
-    for i in range(2):
-        pass
     for one_item_take_sequence in map(list, itertools.permutations([0, 1, 2, 3, 4, 5])):
         # 初始化
         total_angles_list = list()
@@ -198,9 +196,8 @@ def calc_min(one_item_layout_sequence:list[ColaBox]):
 
     return min_result_list[1], min_result_list[2]
 
+# calc_min(one_item_layout_sequence);
 # for item_layout_sequence in all_item_layout_sequence:
 #     for i in range(6):
 #         print(item_layout_sequence[i].cola_0_box_1,end='')
 #     print(calc_min(item_layout_sequence))
-for one_item_layout_sequence in all_item_layout_sequence:
-    calc_min(one_item_layout_sequence)
