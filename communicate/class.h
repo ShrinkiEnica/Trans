@@ -8,7 +8,7 @@ private:
     int relay_pin;
 
 public:
-    Center_servo(int pin, int relay_pin, int angle)
+    Center_servo(int pin, int relay_pin)
     {
         this->pin = pin;
         this->angle = angle;
@@ -23,11 +23,13 @@ public:
         for (int i = 0; i < times; i++)
         {
             center_servo.write(angle + i * interval);
-            delay(40);
+            for (int start = millis(); millis() - start < 60;)
+                ;
         }
         // 更新变量
         // 更新变量的时间不需要那么长
-        delay(5);
+        for (int start = millis(); millis() - start < 5;)
+            ;
         angle = run_to_angle;
     }
     void init(int reset_angle = 180 / 2)
@@ -35,14 +37,12 @@ public:
         digitalWrite(relay_pin, HIGH);
         center_servo.write(reset_angle);
         // 更新变量
-        delay(5);
+        for (int start = millis(); millis() - start < 5;)
+            ;
         angle = reset_angle;
     }
 
-    void relay_enable()
-    {
-        digitalWrite(relay_pin, HIGH);
-    }
+    void relay_enable() { digitalWrite(relay_pin, HIGH); }
 
     void write(int run_to_angle)
     {
@@ -62,18 +62,9 @@ private:
     int pin;
 
 public:
-    Sucker(int pin)
-    {
-        this->pin = pin;
-    }
-    void suck()
-    {
-        digitalWrite(pin, HIGH);
-    }
-    void exhale()
-    {
-        digitalWrite(pin, LOW);
-    }
+    Sucker(int pin) { this->pin = pin; }
+    void suck() { digitalWrite(pin, HIGH); }
+    void exhale() { digitalWrite(pin, LOW); }
 };
 
 class Motor
@@ -113,35 +104,45 @@ private:
     int pin;
 
 public:
+    bool state = 1;
     Servo_class(int pin, int stable_angle = 92)
     {
         this->pin = pin;
         this->stable_angle = stable_angle;
     }
+    void up_until_interrupt(int time = 100)
+    {
+        while (state)
+        {
+            write_up();
+        }
+        state = 1;
+    }
+    void down_until_interrupt(int time = 100)
+    {
+        while (state)
+        {
+            write_down();
+        }
+        state = 1;
+    }
 
     void quick_up(int time)
     {
         my_servo.write(170);
-        delay(time);
+        for (int start = millis(); millis() - start < time;)
+            ;
         my_servo.write(stable_angle);
     }
-    void stop(int stable_angle = 92)
-    {
-        my_servo.write(stable_angle);
-    }
-    void write_up()
-    {
-        my_servo.write(170);
-    }
+    void stop(int stable_angle = 92) { my_servo.write(stable_angle); }
+    void write_up() { my_servo.write(170); }
 
-    void write_down()
-    {
-        my_servo.write(10);
-    }
+    void write_down() { my_servo.write(10); }
     void quick_down(int time)
     {
         my_servo.write(10);
-        delay(time);
+        for (int start = millis(); millis() - start < time;)
+            ;
         my_servo.write(stable_angle);
     }
     void attach(int attach_pin, int pulse_width_start, int pulse_width_end)
@@ -165,25 +166,15 @@ public:
     {
         this->release_angle = release_angle;
         this->grab_angle = grab_angle;
-        this->time = 2000;
     }
 
-    void grab()
-    {
-        my_servo.write(grab_angle);
-        delay(time);
-    }
-    void release()
-    {
-        my_servo.write(release_angle);
-        delay(time);
-    }
+    void grab() { my_servo.write(grab_angle); }
+    void release() { my_servo.write(release_angle); }
+    void release_softly() { my_servo.write((grab_angle + release_angle) >> 2); }
     void attach(int attach_pin, int val1, int val2)
     {
         my_servo.attach(attach_pin, val1, val2);
         pin = attach_pin;
     }
-    void write(int val){
-        my_servo.write(val);
-    }
+    void write(int val) { my_servo.write(val); }
 };

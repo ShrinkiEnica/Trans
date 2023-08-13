@@ -9,10 +9,10 @@ void loop()
 {
   digitalWrite(53, LOW);
   if (softSerial.available())
-  { 
+  {
     // 至少得delay 200 ms
     // 在openmv中最好也sleep_ms 10
-    delay(200); 
+    delay(200);
     if (softSerial.read() == 's')
     {
       Serial.print("fuck");

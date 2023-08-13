@@ -1,16 +1,11 @@
 #coding = UTF-8
 import cv2
 import numpy as np
-import serial
+import matplotlib.pyplot as plt
 import time
 
 
 
-#name = 0
-port = "/dev/ttyACM0"
-baudRate = 9600
-
-ser = serial.Serial(port,baudRate,timeout = 0.5)
 
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
@@ -19,7 +14,7 @@ cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
 
 ret, frame = cap.read()
 rows, cols, channels = frame.shape
-#print(cols, rows, channels)
+print(cols, rows, channels)
 
 def img_p(img):
     blur = cv2.blur(img, (3,3))
@@ -92,18 +87,5 @@ while (1):
 #ser.flushInput()
 time.sleep(1.6)
 
-print("%d%d%d%d%d%d"%(a,b,c,d,e,f))
-ser.write('s'.encode())
-ser.write(a.encode())
-ser.write(b.encode())
-ser.write(c.encode())
-ser.write(d.encode())
-ser.write(e.encode())
-ser.write(f.encode())
-response = ser.readall()
-print(response)
-#ser.flushInput()
-
-ser.close()
 cap.release()
 cv2.destroyAllWindows()
